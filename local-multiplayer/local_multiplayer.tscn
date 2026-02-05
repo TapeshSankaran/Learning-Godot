@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://c6hndm78mjra2"]
+
+[ext_resource type="Script" uid="uid://7vk6yx5xw7l1" path="res://local_multiplayer.gd" id="1_1og4c"]
+[ext_resource type="PackedScene" uid="uid://dnl328y616kco" path="res://player.tscn" id="2_hm485"]
+[ext_resource type="PackedScene" uid="uid://5w2tjmfq0nxo" path="res://box.tscn" id="3_6voad"]
+
+[node name="LocalMultiplayer" type="Node2D" unique_id=550459229]
+script = ExtResource("1_1og4c")
+player_scene = ExtResource("2_hm485")
+
+[node name="Host" type="Button" parent="." unique_id=868785377]
+offset_left = 8.0
+offset_top = 521.0
+offset_right = 89.0
+offset_bottom = 570.0
+text = "Host"
+
+[node name="Join" type="Button" parent="." unique_id=118135988]
+offset_left = 9.0
+offset_top = 580.0
+offset_right = 90.0
+offset_bottom = 629.0
+text = "Join"
+
+[node name="Players" type="Node2D" parent="." unique_id=1511074634]
+
+[node name="Box" parent="." unique_id=222205003 instance=ExtResource("3_6voad")]
+position = Vector2(580, 334)
+mass = 0.01
+
+[node name="MultiplayerSpawner" type="MultiplayerSpawner" parent="." unique_id=1312082446]
+_spawnable_scenes = PackedStringArray("uid://dnl328y616kco")
+spawn_path = NodePath("..")
+
+[connection signal="pressed" from="Host" to="." method="_on_host_pressed"]
+[connection signal="pressed" from="Join" to="." method="_on_join_pressed"]

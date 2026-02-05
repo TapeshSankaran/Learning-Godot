@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://5w2tjmfq0nxo"]
+
+[ext_resource type="Script" uid="uid://dpbckjp6bmbkn" path="res://synced_rigidbody_simple.gd" id="1_g2tbl"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_g2tbl"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_g2tbl"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath(".:linear_velocity")
+properties/1/spawn = true
+properties/1/replication_mode = 1
+properties/2/path = NodePath(".:angular_velocity")
+properties/2/spawn = true
+properties/2/replication_mode = 1
+properties/3/path = NodePath(".:rotation")
+properties/3/spawn = true
+properties/3/replication_mode = 1
+
+[node name="Box" type="RigidBody2D" unique_id=222205003]
+gravity_scale = 0.0
+script = ExtResource("1_g2tbl")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=121523176]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1690392541]
+scale = Vector2(4, 4)
+shape = SubResource("RectangleShape2D_g2tbl")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=797761022]
+replication_config = SubResource("SceneReplicationConfig_g2tbl")
