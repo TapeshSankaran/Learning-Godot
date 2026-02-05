@@ -7,6 +7,7 @@ var target_pos := Vector2.ZERO
 var target_rot := 0.0
 var target_linear_vel := Vector2.ZERO
 var target_angular_vel := 0.0
+var is_initialized := false
 
 func _ready():
 	# Server has authority over all scene physics objects
@@ -15,13 +16,40 @@ func _ready():
 	target_pos = global_position
 	target_rot = rotation
 	
-	# Only server simulates physics
+	# Wait for multiplayer to be initialized before setting up
+	_setup_physics_mode()
+
+func _setup_physics_mode():
+	# Check if multiplayer is actually active
+	if multiplayer.multiplayer_peer == null:
+		# No multiplayer yet - this is single player or before host/join
+		print("[RigidBody:", name, "] No multiplayer peer - running in single player mode")
+		is_initialized = true
+		return
+	
+	# Wait a frame to ensure peer is fully initialized
+	await get_tree().process_frame
+	
+	# Now check if we're the server
 	if not multiplayer.is_server():
 		# Client: Use kinematic freeze mode so position updates work
 		freeze_mode = FreezeMode.FREEZE_MODE_KINEMATIC
 		freeze = true
+		print("[RigidBody:", name, "] Client mode - physics frozen, will sync from server")
+	else:
+		print("[RigidBody:", name, "] Server mode - physics active")
+	
+	is_initialized = true
 
 func _physics_process(delta):
+	# Don't do anything until multiplayer is initialized
+	if not is_initialized:
+		return
+	
+	# If no multiplayer, just run normal physics
+	if multiplayer.multiplayer_peer == null:
+		return
+	
 	if multiplayer.is_server():
 		# Server: Physics simulation happens automatically
 		# Just send state to all clients

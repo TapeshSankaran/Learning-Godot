@@ -8,18 +8,15 @@
 properties/0/path = NodePath(".:position")
 properties/0/spawn = true
 properties/0/replication_mode = 1
-properties/1/path = NodePath(".:linear_velocity")
+properties/1/path = NodePath(".:rotation")
 properties/1/spawn = true
 properties/1/replication_mode = 1
-properties/2/path = NodePath(".:angular_velocity")
-properties/2/spawn = true
-properties/2/replication_mode = 1
-properties/3/path = NodePath(".:rotation")
-properties/3/spawn = true
-properties/3/replication_mode = 1
 
 [node name="Box" type="RigidBody2D" unique_id=222205003]
+mass = 10.0
 gravity_scale = 0.0
+linear_damp = 1.0
+angular_damp = 1.0
 script = ExtResource("1_g2tbl")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=121523176]

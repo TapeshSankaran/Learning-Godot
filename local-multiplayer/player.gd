@@ -20,13 +20,19 @@ func _ready():
 	print(" [", multiplayer.get_unique_id(), "]: Player ", owner_id, " ready. (Is Server: ", multiplayer.is_server(), ")")
 
 func _physics_process(delta):
-	# PHYSICS: Server only (server simulates ALL players)
 	if multiplayer.is_server():
-		# Update velocity based on input
 		velocity = input_dir * speed
 		move_and_slide()
 		
-		# Broadcast state to all clients
+		for i in range(get_slide_collision_count()):
+			var collision = get_slide_collision(i)
+			var collider = collision.get_collider()
+			
+			if collider is RigidBody2D:
+				var push_dir = -collision.get_normal()
+				var impulse = push_dir * 200 * delta
+				collider.apply_central_impulse(impulse)
+		
 		sync_state.rpc(global_position, velocity)
 	else:
 		# CLIENTS: Smooth interpolation to server position
