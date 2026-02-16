@@ -47,7 +47,7 @@ func _process(delta):
 			input_dir = dir
 		else:
 			# Client player: send input to server
-			send_input.rpc_id(1, dir)
+			send_input.rpc_id(get_multiplayer_authority(), dir)
 
 @rpc("any_peer", "call_remote", "reliable")
 func send_input(dir: Vector2):

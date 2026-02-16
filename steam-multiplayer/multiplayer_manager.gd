@@ -39,8 +39,9 @@ func _on_lobby_created(result: int, lobby_id: int):
 		await get_tree().process_frame
 		
 		print("Lobby created, lobby id: ", lobby_id)
+		print(" Host id: ", multiplayer.get_unique_id())
 		
-		_add_player()
+		_add_player(multiplayer.get_unique_id())
 
 func _on_lobby_joined(lobby_id: int, perms: int, locked: bool, response: int):
 	if !is_joining:
@@ -90,10 +91,15 @@ func _add_player(id: int = 1):
 	var player = player_scene.instantiate()
 	player.name = str(id)
 	
+	var server_id = 1
+	if multiplayer.multiplayer_peer is SteamMultiplayerPeer:
+		server_id = Steam.getLobbyOwner(lobby_id) if lobby_id > 0 else multiplayer.get_unique_id()
+	
 	# Server Owns ALL Players
-	player.set_multiplayer_authority(1)
+	player.set_multiplayer_authority(server_id)
 		
-	call_deferred("add_child", player)
+	add_child(player, true)
+	print("Spawned player ", id, " with authority: ", player.get_multiplayer_authority())
 	
 func _remove_player(id: int):
 	if !self.has_node(str(id)):
