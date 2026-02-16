@@ -9,33 +9,43 @@ func _ready():
 
 func _setup_mode():
 	if multiplayer.multiplayer_peer == null:
-		return
+		await get_tree().process_frame
 
-	if is_multiplayer_authority():
+	if multiplayer.is_server():
 		freeze = false
 		sleeping = false
-		print("[RigidBody:", name, "] Authority mode - physics active")
+		collision_layer = 1
+		collision_mask = 1
+		print("[RigidBody:", name, "] SERVER physics active")
 	else:
 		freeze = true
 		sleeping = true
 		collision_layer = 0
 		collision_mask = 0
-		print("[RigidBody:", name, "] Proxy mode - physics disabled")
-
+		print("[RigidBody:", name, "] CLIENT proxy mode")
 
 func _physics_process(delta):
-	if is_multiplayer_authority():
+	if multiplayer.is_server():
 		sync_state.rpc(global_position, rotation)
 
+@rpc("any_peer", "call_remote", "reliable")
+func request_impulse(force: Vector2, position: Vector2):
+	if not multiplayer.is_server():
+		return
+
+	apply_impulse(force, position)
 
 @rpc("authority", "call_remote", "unreliable")
 func sync_state(pos: Vector2, rot: float):
-	if not is_multiplayer_authority():
-		target_position = pos
-		target_rotation = rot
+	if multiplayer.is_server():
+		return
 
+	target_position = pos
+	target_rotation = rot
 
 func _process(delta):
-	if not is_multiplayer_authority():
-		global_position = global_position.lerp(target_position, 0.35)
-		rotation = lerp_angle(rotation, target_rotation, 0.35)
+	if multiplayer.is_server():
+		return
+
+	global_position = global_position.lerp(target_position, 0.35)
+	rotation = lerp_angle(rotation, target_rotation, 0.35)
