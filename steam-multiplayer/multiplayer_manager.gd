@@ -33,14 +33,16 @@ func _on_lobby_created(result: int, lobby_id: int):
 		peer.create_host()
 		multiplayer.multiplayer_peer = peer
 		
-		multiplayer.peer_connected.connect(_add_player)
-		multiplayer.peer_disconnected.connect(_remove_player)
+		multiplayer.peer_connected.connect(_on_peer_connected)
+		multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 		
+		# Wait for Steam to fully initialize the peer
 		await get_tree().process_frame
 		
 		print("Lobby created, lobby id: ", lobby_id)
-		print(" Host id: ", multiplayer.get_unique_id())
+		print("Host ID: ", multiplayer.get_unique_id())
 		
+		# Spawn the host player using the actual peer ID
 		_add_player(multiplayer.get_unique_id())
 
 func _on_lobby_joined(lobby_id: int, perms: int, locked: bool, response: int):
@@ -73,6 +75,7 @@ func _on_connection_failed():
 func _on_peer_connected(id):
 	print(" [", multiplayer.get_unique_id(), "]: Peer connected: ", id, " (Is Server: ", multiplayer.is_server(), ")")
 
+	# Only the host spawns players
 	if is_host:
 		print("Server: Spawning player for peer ", id)
 		_add_player(id)
@@ -83,21 +86,23 @@ func _on_peer_disconnected(id):
 	print("Peer disconnected: ", id)
 	_remove_player(id)
 	
-func _add_player(id: int = 1):
+func _add_player(id: int):
 	if has_node(str(id)):
-		print("Player already exists. Aborting summon.")
+		print("Player ", id, " already exists. Aborting summon.")
 		return
 	
 	var player = player_scene.instantiate()
 	player.name = str(id)
 	
-	var server_id = 1
+	# Get the server's ID (host's Steam ID)
+	var server_id = 1  # Default for ENet
 	if multiplayer.multiplayer_peer is SteamMultiplayerPeer:
+		# For Steam, server ID is the host's Steam ID
 		server_id = Steam.getLobbyOwner(lobby_id) if lobby_id > 0 else multiplayer.get_unique_id()
 	
-	# Server Owns ALL Players
+	# Server always has authority over ALL players' physics
 	player.set_multiplayer_authority(server_id)
-		
+	
 	add_child(player, true)
 	print("Spawned player ", id, " with authority: ", player.get_multiplayer_authority())
 	
@@ -106,6 +111,7 @@ func _remove_player(id: int):
 		return
 	
 	self.get_node(str(id)).queue_free()
+	print("Removed player ", id)
 
 func _on_host_pressed() -> void:
 	host_lobby()
