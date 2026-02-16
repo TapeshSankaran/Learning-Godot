@@ -52,12 +52,36 @@ func _on_lobby_joined(lobby_id: int, perms: int, locked: bool, response: int):
 	peer.create_client(Steam.getLobbyOwner(lobby_id))
 	multiplayer.multiplayer_peer = peer
 	
-	if is_host:
-		_add_player(multiplayer.get_unique_id())
+	multiplayer.connected_to_server.connect(_on_connected_to_server)
+	multiplayer.connection_failed.connect(_on_connection_failed)
+	multiplayer.peer_connected.connect(_on_peer_connected)
+	multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 	
-	
+	print("Attempting to connect to server...")
+	print(" [", multiplayer.get_unique_id(), "]: Before connection - Is Server:", multiplayer.is_server())
+		
 	is_joining = false
 
+func _on_connected_to_server():
+	print("Successfully connected to server!")
+	print(" [", multiplayer.get_unique_id(), "]: After connection - Is Server: ", multiplayer.is_server())
+
+func _on_connection_failed():
+	print("Connection to server failed!")
+
+func _on_peer_connected(id):
+	print(" [", multiplayer.get_unique_id(), "]: Peer connected: ", id, " (Is Server: ", multiplayer.is_server(), ")")
+
+	if is_host:
+		print("Server: Spawning player for peer ", id)
+		_add_player(id)
+	else:
+		print("Client: Not spawning (server will handle it)")
+
+func _on_peer_disconnected(id):
+	print("Peer disconnected: ", id)
+	_remove_player(id)
+	
 func _add_player(id: int = 1):
 	if has_node(str(id)):
 		print("Player already exists. Aborting summon.")
