@@ -18,7 +18,7 @@ func _ready():
 	print("Player ", owner_id, " ready. Local ID: ", multiplayer.get_unique_id(), " Is Server: ", multiplayer.is_server(), " Authority: ", get_multiplayer_authority())
 
 func _physics_process(delta):
-	if multiplayer.is_server():
+	if is_multiplayer_authority():
 		velocity = input_dir * SPEED
 		move_and_slide()
 		
@@ -36,29 +36,13 @@ func _physics_process(delta):
 		global_position = global_position.lerp(target_pos, 0.3)
 		velocity = target_velocity
 		
-func _process(delta):
-	var is_local_player = multiplayer.get_unique_id() == owner_id
-	
-	if is_local_player:
+func _process(delta):	
+	if is_multiplayer_authority():
 		var dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
-		
-		if multiplayer.is_server():
-			input_dir = dir
-		else:
-			send_input.rpc(dir)
-
-@rpc("any_peer", "call_remote", "reliable")
-func send_input(dir: Vector2):
-	var sender_id = multiplayer.get_remote_sender_id()
-	if sender_id != owner_id:
-		return
-	
-	input_dir = dir
+		input_dir = dir
 
 @rpc("any_peer", "call_remote", "unreliable")
 func sync_state(pos: Vector2, vel: Vector2):
-	if not multiplayer.is_server():
-		var sender_id = multiplayer.get_remote_sender_id()
-		if sender_id == get_multiplayer_authority():
-			target_pos = pos
-			target_velocity = vel
+	if not is_multiplayer_authority():
+		target_pos = pos
+		target_velocity = vel

@@ -39,7 +39,7 @@ func _on_lobby_created(result: int, lobby_id: int):
 		
 		await get_tree().process_frame
 		
-		host_steam_id = Steam.getSteamID()
+		host_steam_id = multiplayer.get_unique_id()
 		
 		print("=== HOST SETUP ===")
 		print("Lobby created, lobby id: ", lobby_id)
@@ -87,18 +87,14 @@ func _on_peer_connected(id):
 	print("Peer ID: ", id)
 	print("Is Server: ", multiplayer.is_server())
 
-	if is_host:
-		print("SERVER: Client connected with peer ID: ", id)
-		
+	if multiplayer.is_server():
 		_add_player_local(id)
-		
+
 		spawn_player.rpc(id)
-		
-		print("SERVER: Sending existing players to new client...")
+
 		for child in get_children():
 			if child is CharacterBody2D:
 				var existing_id = child.name.to_int()
-				print("  Sending player: ", existing_id)
 				spawn_player.rpc_id(id, existing_id)
 
 func _on_peer_disconnected(id):
@@ -110,10 +106,7 @@ func _on_peer_disconnected(id):
 
 @rpc("any_peer", "call_local", "reliable")
 func spawn_player(id: int):
-	print("[RPC] spawn_player(", id, ") - I am: ", multiplayer.get_unique_id())
-	
-	if not is_host:
-		print("CLIENT: Spawning player ", id)
+	if not has_node(str(id)):
 		_add_player_local(id)
 
 @rpc("any_peer", "call_local", "reliable")
@@ -123,17 +116,16 @@ func remove_player(id: int):
 
 func _add_player_local(id: int):
 	if has_node(str(id)):
-		print("Player ", id, " already exists, skipping")
 		return
 	
 	var player = player_scene.instantiate()
 	player.name = str(id)
-	player.set_multiplayer_authority(host_steam_id)
-	
+
+	player.set_multiplayer_authority(id)
+
 	add_child(player, true)
-	
-	print("✓ Spawned player ", id, " (authority: ", host_steam_id, ")")
-	print("  Current players: ", get_children().filter(func(c): return c is CharacterBody2D).map(func(c): return c.name))
+
+	print("✓ Spawned player ", id, " authority: ", id)
 	
 func _remove_player(id: int):
 	if !self.has_node(str(id)):
