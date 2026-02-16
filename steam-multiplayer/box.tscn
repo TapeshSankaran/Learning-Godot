@@ -25,7 +25,7 @@ angular_damp = 1.0
 script = ExtResource("1_g2tbl")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1730853761]
-scale = Vector2(3, 3)
+scale = Vector2(6.5, 6.5)
 shape = SubResource("RectangleShape2D_oyhfb")
 debug_color = Color(0.9215317, 5.5927932e-05, 0.6927474, 0.41960785)
 
