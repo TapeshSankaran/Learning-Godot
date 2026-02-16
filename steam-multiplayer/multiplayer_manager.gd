@@ -121,11 +121,12 @@ func _add_player_local(id: int):
 	var player = player_scene.instantiate()
 	player.name = str(id)
 
-	player.set_multiplayer_authority(1)
+	player.set_multiplayer_authority(id)
 
 	add_child(player, true)
 
 	print("✓ Spawned player ", id, " authority: ", id)
+
 	
 func _remove_player(id: int):
 	if !self.has_node(str(id)):
