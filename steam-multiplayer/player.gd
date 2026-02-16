@@ -21,7 +21,6 @@ func _physics_process(delta):
 	if multiplayer.is_server():
 		velocity = input_dir * SPEED
 		move_and_slide()
-
 		sync_state.rpc(global_position, velocity)
 	else:
 		global_position = global_position.lerp(target_pos, 0.25)
@@ -34,12 +33,14 @@ func _process(delta):
 		if multiplayer.is_server():
 			input_dir = dir
 		else:
-			send_input.rpc_id(1, dir)
-
+			send_input.rpc_id(1, multiplayer.get_unique_id(), dir)
 		
 @rpc("any_peer", "call_remote", "reliable")
-func send_input(dir: Vector2):
-	if multiplayer.is_server():
+func send_input(sender_id: int, dir: Vector2):
+	if not multiplayer.is_server():
+		return
+
+	if name.to_int() == sender_id:
 		input_dir = dir
 
 @rpc("authority", "call_remote", "unreliable")

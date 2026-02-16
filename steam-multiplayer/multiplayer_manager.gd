@@ -121,7 +121,7 @@ func _add_player_local(id: int):
 	var player = player_scene.instantiate()
 	player.name = str(id)
 
-	player.set_multiplayer_authority(id)
+	player.set_multiplayer_authority(1)
 
 	add_child(player, true)
 
