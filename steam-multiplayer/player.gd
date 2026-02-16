@@ -13,18 +13,15 @@ func _ready():
 	await get_tree().process_frame
 	
 	if has_node("MultiplayerSynchronizer"):
-		# Set synchronizer authority to whoever has physics authority
 		$MultiplayerSynchronizer.set_multiplayer_authority(get_multiplayer_authority())
 	
 	print("Player ", owner_id, " ready. Local ID: ", multiplayer.get_unique_id(), " Is Server: ", multiplayer.is_server(), " Authority: ", get_multiplayer_authority())
 
 func _physics_process(delta):
-	# Server simulates ALL players' physics
 	if multiplayer.is_server():
 		velocity = input_dir * SPEED
 		move_and_slide()
 		
-		# Push RigidBody objects
 		for i in range(get_slide_collision_count()):
 			var collision = get_slide_collision(i)
 			var collider = collision.get_collider()
@@ -34,9 +31,9 @@ func _physics_process(delta):
 				var impulse = push_dir * 200 * delta
 				collider.apply_central_impulse(impulse)
 		
-		# Broadcast state to all clients
 		sync_state.rpc(global_position, velocity)
 	else:
+		# Clients: Smooth interpolation to server position
 		global_position = global_position.lerp(target_pos, 0.3)
 		velocity = target_velocity
 		
@@ -49,7 +46,8 @@ func _process(delta):
 		if multiplayer.is_server():
 			input_dir = dir
 		else:
-			send_input.rpc_id(get_multiplayer_authority(), dir)
+			var authority_peer = get_multiplayer_authority()
+			send_input.rpc_id(authority_peer, dir)
 
 @rpc("any_peer", "call_remote", "reliable")
 func send_input(dir: Vector2):
@@ -60,7 +58,10 @@ func send_input(dir: Vector2):
 	
 	input_dir = dir
 
-@rpc("authority", "call_remote", "unreliable")
+@rpc("any_peer", "call_remote", "unreliable")
 func sync_state(pos: Vector2, vel: Vector2):
+	if multiplayer.get_remote_sender_id() != get_multiplayer_authority():
+		return
+	
 	target_pos = pos
 	target_velocity = vel
