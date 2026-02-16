@@ -36,14 +36,12 @@ func _on_lobby_created(result: int, lobby_id: int):
 		multiplayer.peer_connected.connect(_on_peer_connected)
 		multiplayer.peer_disconnected.connect(_on_peer_disconnected)
 		
-		# Wait for Steam to fully initialize the peer
 		await get_tree().process_frame
 		
 		print("Lobby created, lobby id: ", lobby_id)
 		print("Host ID: ", multiplayer.get_unique_id())
 		
-		# Spawn the host player using the actual peer ID
-		_add_player(multiplayer.get_unique_id())
+		_add_player_local(multiplayer.get_unique_id())
 
 func _on_lobby_joined(lobby_id: int, perms: int, locked: bool, response: int):
 	if !is_joining:
@@ -75,32 +73,46 @@ func _on_connection_failed():
 func _on_peer_connected(id):
 	print(" [", multiplayer.get_unique_id(), "]: Peer connected: ", id, " (Is Server: ", multiplayer.is_server(), ")")
 
-	# Only the host spawns players
 	if is_host:
-		print("Server: Spawning player for peer ", id)
-		_add_player(id)
-	else:
-		print("Client: Not spawning (server will handle it)")
+		_add_player_local(id)
+		spawn_player.rpc(id)
+		
+		for existing_player in get_children():
+			if existing_player is CharacterBody2D:
+				var existing_id = existing_player.name.to_int()
+				spawn_player.rpc_id(id, existing_id)
 
 func _on_peer_disconnected(id):
 	print("Peer disconnected: ", id)
 	_remove_player(id)
 	
-func _add_player(id: int):
+	if is_host:
+		remove_player.rpc(id)
+
+# RPC: Server tells clients to spawn a player
+@rpc("authority", "call_local", "reliable")
+func spawn_player(id: int):
+	if not is_host:
+		_add_player_local(id)
+
+# RPC: Server tells clients to remove a player
+@rpc("authority", "call_local", "reliable")
+func remove_player(id: int):
+	if not is_host:
+		_remove_player(id)
+
+func _add_player_local(id: int):
 	if has_node(str(id)):
-		print("Player ", id, " already exists. Aborting summon.")
+		print("Player ", id, " already exists.")
 		return
 	
 	var player = player_scene.instantiate()
 	player.name = str(id)
 	
-	# Get the server's ID (host's Steam ID)
-	var server_id = 1  # Default for ENet
-	if multiplayer.multiplayer_peer is SteamMultiplayerPeer:
-		# For Steam, server ID is the host's Steam ID
-		server_id = Steam.getLobbyOwner(lobby_id) if lobby_id > 0 else multiplayer.get_unique_id()
+	# Get server ID for authority
+	var server_id = Steam.getLobbyOwner(lobby_id) if lobby_id > 0 else multiplayer.get_unique_id()
 	
-	# Server always has authority over ALL players' physics
+	# Server has authority over ALL players' physics
 	player.set_multiplayer_authority(server_id)
 	
 	add_child(player, true)
