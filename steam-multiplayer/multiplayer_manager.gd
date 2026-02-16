@@ -89,16 +89,13 @@ func _on_peer_connected(id):
 
 	if multiplayer.is_server():
 		_add_player_local(id)
-	
-		spawn_player.rpc_id(id, id)
-	
+
+		spawn_player.rpc(id)
+
 		for child in get_children():
 			if child is CharacterBody2D:
 				var existing_id = child.name.to_int()
 				spawn_player.rpc_id(id, existing_id)
-
-		spawn_player.rpc(id)
-
 
 func _on_peer_disconnected(id):
 	print("Peer disconnected: ", id)
