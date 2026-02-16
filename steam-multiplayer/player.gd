@@ -33,7 +33,6 @@ func _physics_process(delta):
 		
 		sync_state.rpc(global_position, velocity)
 	else:
-		# Clients: Smooth interpolation to server position
 		global_position = global_position.lerp(target_pos, 0.3)
 		velocity = target_velocity
 		
@@ -46,22 +45,20 @@ func _process(delta):
 		if multiplayer.is_server():
 			input_dir = dir
 		else:
-			var authority_peer = get_multiplayer_authority()
-			send_input.rpc_id(authority_peer, dir)
+			send_input.rpc(dir)
 
 @rpc("any_peer", "call_remote", "reliable")
 func send_input(dir: Vector2):
 	var sender_id = multiplayer.get_remote_sender_id()
 	if sender_id != owner_id:
-		push_warning("Player %d tried to control player %d" % [sender_id, owner_id])
 		return
 	
 	input_dir = dir
 
 @rpc("any_peer", "call_remote", "unreliable")
 func sync_state(pos: Vector2, vel: Vector2):
-	if multiplayer.get_remote_sender_id() != get_multiplayer_authority():
-		return
-	
-	target_pos = pos
-	target_velocity = vel
+	if not multiplayer.is_server():
+		var sender_id = multiplayer.get_remote_sender_id()
+		if sender_id == get_multiplayer_authority():
+			target_pos = pos
+			target_velocity = vel
