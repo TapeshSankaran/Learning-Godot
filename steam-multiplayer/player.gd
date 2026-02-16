@@ -27,13 +27,12 @@ func _physics_process(delta):
 		velocity = target_vel
 		
 func _process(delta):
-	if is_multiplayer_authority():
-		var dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	if multiplayer.is_server():
+		return
 
-		if multiplayer.is_server():
-			input_dir = dir
-		else:
-			send_input.rpc_id(1, multiplayer.get_unique_id(), dir)
+	var dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+	send_input.rpc_id(1, multiplayer.get_unique_id(), dir)
+
 		
 @rpc("any_peer", "call_remote", "reliable")
 func send_input(sender_id: int, dir: Vector2):
