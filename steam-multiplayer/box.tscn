@@ -4,20 +4,6 @@
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_oyhfb"]
 
-[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_g2tbl"]
-properties/0/path = NodePath("..:position")
-properties/0/spawn = true
-properties/0/replication_mode = 1
-properties/1/path = NodePath("..:rotation")
-properties/1/spawn = true
-properties/1/replication_mode = 1
-properties/2/path = NodePath("..:linear_velocity")
-properties/2/spawn = true
-properties/2/replication_mode = 1
-properties/3/path = NodePath("..:angular_velocity")
-properties/3/spawn = true
-properties/3/replication_mode = 1
-
 [node name="Box" type="RigidBody2D" unique_id=886819510]
 gravity_scale = 0.0
 linear_damp = 1.0
@@ -30,7 +16,3 @@ shape = SubResource("RectangleShape2D_oyhfb")
 debug_color = Color(0.9215317, 5.5927932e-05, 0.6927474, 0.41960785)
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=2098364631]
-
-[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=600835361]
-root_path = NodePath("../CollisionShape2D")
-replication_config = SubResource("SceneReplicationConfig_g2tbl")
