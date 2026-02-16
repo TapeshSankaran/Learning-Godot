@@ -13,16 +13,13 @@ func _setup_physics_mode():
 		return
 
 	if multiplayer.is_server():
-		# SERVER: simulate physics normally
 		freeze = false
 		sleeping = false
 		print("[RigidBody:", name, "] Server mode - physics active")
 	else:
-		# CLIENT: no physics simulation
 		freeze = true
 		sleeping = true
 
-		# Disable collision solving on client
 		collision_layer = 0
 		collision_mask = 0
 
@@ -30,7 +27,6 @@ func _setup_physics_mode():
 
 
 func _physics_process(delta):
-	# Server sends transform updates
 	if multiplayer.is_server():
 		sync_state.rpc(global_position, rotation)
 
@@ -43,7 +39,6 @@ func sync_state(pos: Vector2, rot: float):
 
 
 func _process(delta):
-	# Clients interpolate toward server state
 	if not multiplayer.is_server():
 		global_position = global_position.lerp(target_position, 0.35)
 		rotation = lerp_angle(rotation, target_rotation, 0.35)
