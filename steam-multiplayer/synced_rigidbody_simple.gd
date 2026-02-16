@@ -5,6 +5,11 @@ var target_rotation: float
 
 func _ready():
 	await get_tree().process_frame
+
+	set_multiplayer_authority(1)	
+	if has_node("MultiplayerSynchronizer"):
+		$MultiplayerSynchronizer.set_multiplayer_authority(1)
+	
 	_setup_mode()
 
 func _setup_mode():
@@ -23,21 +28,3 @@ func _setup_mode():
 		collision_mask = 0
 
 		print("[RigidBody:", name, "] Proxy mode - physics disabled")
-
-
-func _physics_process(delta):
-	if is_multiplayer_authority():
-		sync_state.rpc(global_position, rotation)
-
-
-@rpc("authority", "call_remote", "unreliable")
-func sync_state(pos: Vector2, rot: float):
-	if not is_multiplayer_authority():
-		target_position = pos
-		target_rotation = rot
-
-
-func _process(delta):
-	if not is_multiplayer_authority():
-		global_position = global_position.lerp(target_position, 0.35)
-		rotation = lerp_angle(rotation, target_rotation, 0.35)

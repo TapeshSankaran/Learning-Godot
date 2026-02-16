@@ -26,6 +26,17 @@ func _physics_process(delta):
 		input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 		velocity = input_dir * SPEED
 		move_and_slide()
+		
+		for i in range(get_slide_collision_count()):
+			var collision = get_slide_collision(i)
+			var collider = collision.get_collider()
+			
+			if collider is RigidBody2D:
+				var push_dir = -collision.get_normal()
+				var impulse = push_dir * 200 * delta
+				collider.apply_central_impulse(impulse)
+		
+		sync_state.rpc(global_position, velocity)
 
 		sync_state.rpc(global_position, velocity)
 
