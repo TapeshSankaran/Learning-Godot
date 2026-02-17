@@ -23,7 +23,6 @@ func _ready():
 
 func _physics_process(delta):
 	if is_multiplayer_authority():
-		input_dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
 		velocity = input_dir * SPEED
 		move_and_slide()
 		
@@ -38,12 +37,31 @@ func _physics_process(delta):
 		
 		sync_state.rpc(global_position, velocity)
 
-		sync_state.rpc(global_position, velocity)
-
 	else:
 		global_position = global_position.lerp(target_pos, 0.25)
 		velocity = target_vel
 
+func _process(delta):
+	var is_local_player = multiplayer.get_unique_id() == owner_id
+	
+	if is_local_player:
+		var dir = Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down")
+		
+		if multiplayer.is_server():
+			input_dir = dir
+		else:
+			send_input.rpc_id(1, dir)
+
+@rpc("any_peer", "call_remote", "reliable")
+func send_input(dir: Vector2):
+	var sender_id = multiplayer.get_remote_sender_id()
+	if sender_id != owner_id:
+		push_warning("Player %d tried to control player %d" % [sender_id, owner_id])
+		return
+	
+	# Server receives and applies the input
+	input_dir = dir
+	
 @rpc("authority", "call_remote", "unreliable")
 func sync_state(pos: Vector2, vel: Vector2):
 	if not is_multiplayer_authority():
