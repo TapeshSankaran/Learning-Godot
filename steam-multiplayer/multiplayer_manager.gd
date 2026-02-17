@@ -87,15 +87,16 @@ func _on_peer_connected(id):
 	print("Peer ID: ", id)
 	print("Is Server: ", multiplayer.is_server())
 
-	if multiplayer.is_server():
+	if is_host:
 		_add_player_local(id)
 
 		spawn_player.rpc(id)
-
 		for child in get_children():
 			if child is CharacterBody2D:
 				var existing_id = child.name.to_int()
 				spawn_player.rpc_id(id, existing_id)
+	else:
+		print("Client: Not spawning (Server owns authority)")
 
 func _on_peer_disconnected(id):
 	print("Peer disconnected: ", id)
@@ -121,12 +122,10 @@ func _add_player_local(id: int):
 	var player = player_scene.instantiate()
 	player.name = str(id)
 
-	player.set_multiplayer_authority(id)
+	player.set_multiplayer_authority(1)
 
 	add_child(player, true)
-
 	print("✓ Spawned player ", id, " authority: ", id)
-
 	
 func _remove_player(id: int):
 	if !self.has_node(str(id)):

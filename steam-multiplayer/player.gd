@@ -14,7 +14,7 @@ func _ready():
 	await get_tree().process_frame
 	
 	if has_node("MultiplayerSynchronizer"):
-		$MultiplayerSynchronizer.set_multiplayer_authority(get_multiplayer_authority())
+		$MultiplayerSynchronizer.set_multiplayer_authority(1)
 	
 	print("Player ", owner_id, " ready. Local ID: ", multiplayer.get_unique_id(), " Is Server: ", multiplayer.is_server(), " Authority: ", get_multiplayer_authority())
 	print("Player ", owner_id, 
